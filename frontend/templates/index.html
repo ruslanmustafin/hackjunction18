@@ -33,9 +33,24 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
   <script>
     var ctx = document.getElementById('myChart').getContext("2d");
+    var colors = "{{colors}}"
+
+    
+    
     var gradientStroke = ctx.createLinearGradient(500, 0, 100, 0);
-    gradientStroke.addColorStop(0, "#80b6f4");
-    gradientStroke.addColorStop(1, "#f49080");
+     var gradientStroke = ctx.createLinearGradient(0, 0, 1000, 0);
+    gradientStroke.addColorStop(0,  "#f49080");
+    gradientStroke.addColorStop(0.1,  "#403aee");
+    gradientStroke.addColorStop(0.2,  "#e8ee3a");
+    gradientStroke.addColorStop(0.3,  "#403aee");
+    gradientStroke.addColorStop(0.4,  "#e8ee3a");
+    gradientStroke.addColorStop(0.5,  "#403aee");
+    gradientStroke.addColorStop(0.6,  "#f49080");
+    gradientStroke.addColorStop(0.7,  "#403aee");
+    gradientStroke.addColorStop(0.8,  "#e8ee3a");
+    gradientStroke.addColorStop(0.9,  "#403aee");
+    gradientStroke.addColorStop(1, "#80f4ca");
+  
     var gradientFill = ctx.createLinearGradient(500, 0, 100, 0);
     gradientFill.addColorStop(0, "rgba(128, 182, 244, 0.6)");
     gradientFill.addColorStop(1, "rgba(244, 144, 128, 0.6)");
@@ -48,8 +63,12 @@
           datasets: [{
               label: "Data",
               borderColor: gradientStroke,
-              pointBorderColor: gradientStroke,
-              pointBackgroundColor: gradientStroke,
+              pointBorderColor: [{% for item in colors %}
+                  "{{item}}",
+                  {% endfor %}],
+              pointBackgroundColor: : [{% for item in colors %}
+                  "{{item}}",
+                  {% endfor %}],
               pointHoverBackgroundColor: gradientStroke,
               pointHoverBorderColor: gradientStroke,
               pointBorderWidth: 10,
@@ -57,7 +76,7 @@
               pointHoverBorderWidth: 1,
               pointRadius: 3,
               fill: true,                     // If true, fill the area under the line
-              backgroundColor: gradientFill,  // Specify the background color to the chart area
+              backgroundColor: gradientStroke,  // Specify the background color to the chart area
               borderWidth: 4,
               data: [{% for item in values %}
                       {{item}},
