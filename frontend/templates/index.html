@@ -42,7 +42,9 @@
     var myChart = new Chart(ctx, {
       type: 'line',
       data: {
-          "{{labels}",
+          labels: [{% for item in labels %}
+                  "{{item}}",
+              {% endfor %}],
           datasets: [{
               label: "Data",
               borderColor: gradientStroke,
@@ -57,7 +59,9 @@
               fill: true,                     // If true, fill the area under the line
               backgroundColor: gradientFill,  // Specify the background color to the chart area
               borderWidth: 4,
-              data: [100, 120, 150, 170, 180, 170, 160]
+              data: [{% for item in values %}
+                      {{item}},
+                    {% endfor %}]
           }]
       },
       options: {
