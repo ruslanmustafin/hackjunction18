@@ -95,7 +95,32 @@
                       fontStyle: "bold"
                   }
               }]
-          }
+          },
+          tooltips: {
+            position: 'nearest',
+            mode: 'index',
+            callbacks: {
+                  // Use the footer callback to display the sum of the items showing in the tooltip
+                  beforeBody: function(tooltipItems, data) {
+                    return 'Topic: ' + '%discussed_topic%';
+                  },
+
+                  title: function(tooltipItems, data) {
+                    return '';
+                  },
+
+                  label: function(tooltipItem, data) {
+                    return '';
+                  },
+
+                  labelColor: function(tooltipItem, chart) {
+                    return {
+                        borderColor: 'rgb(255, 0, 0)',
+                        backgroundColor: 'rgb(255, 0, 0)'
+                    }
+                  },
+              },
+          },
       }
     });
   </script>
