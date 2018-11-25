@@ -2,6 +2,7 @@ from keras.models import load_model
 import numpy as np
 from flask import Flask
 from flask import render_template
+from flask import request
 import random
 
 from queue import Queue, Empty
@@ -16,6 +17,8 @@ from matplotlib import cm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from flask import jsonify
+# from kafka import KafkaProducer
+
 
 class MplColorHelper:
 
@@ -83,6 +86,10 @@ def process_batch(tokenizer, model, batch, timestamps, ma_filter, max_len=60):
 
 def send_messages():
 
+    
+    # producer = KafkaProducer(
+    #     bootstrap_servers='35.228.26.195:9092')
+
     tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
     ma_filter = MovingAverageFilter()
 
@@ -119,23 +126,25 @@ def send_messages():
 
             sleep(delay * 0.001 * (1 / speed))
 
-            if len(line[2]) > 0:
-                batch.append(line[2])
-                timestamps.append(milliseconds)
-                # print(len(batch), line[2])
+            # if len(line[2]) > 0:
+            #     batch.append(line[2])
+            #     timestamps.append(milliseconds)
+            #     # print(len(batch), line[2])
 
             
 
             time_passed += delay
 
             msg_queue.put(line[2])
+            # producer.send('evilpanda', str.encode('{},{}'.format(line[2], milliseconds)))
+            
 
-            if time_passed > time_window:
-                # process_batch(tokenizer, model, batch, timestamps, ma_filter)
-                batch.clear()
-                timestamps.clear()
+            # if time_passed > time_window:
+            #     # process_batch(tokenizer, model, batch, timestamps, ma_filter)
+            #     batch.clear()
+            #     timestamps.clear()
 
-                time_passed = 0
+            #     time_passed = 0
 
 
             
@@ -164,6 +173,8 @@ def new_messages():
 def receive_batch():
     batch = request.json['data']
     print(batch)
+
+    return jsonify({'success':True})
 
 @app.route("/")
 def chart():
