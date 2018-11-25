@@ -4,7 +4,7 @@ from flask import Flask
 from flask import render_template
 import random
 
-from queue import Queue
+from queue import Queue, Empty
 import threading
 import pickle
 import csv
@@ -15,6 +15,7 @@ from keras.preprocessing import sequence
 from matplotlib import cm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from flask import jsonify
 
 class MplColorHelper:
 
@@ -123,10 +124,14 @@ def send_messages():
                 timestamps.append(milliseconds)
                 # print(len(batch), line[2])
 
+            
+
             time_passed += delay
 
+            msg_queue.put(line[2])
+
             if time_passed > time_window:
-                process_batch(tokenizer, model, batch, timestamps, ma_filter)
+                # process_batch(tokenizer, model, batch, timestamps, ma_filter)
                 batch.clear()
                 timestamps.clear()
 
@@ -140,9 +145,25 @@ def send_messages():
 def clamp(r, g, b, a):
     return int(r*254),int(g*254),int(b*254)#,int(a*254)
 
+
+msg_queue = Queue()
 global_data = []
 COL = MplColorHelper('viridis', 0, 2)
 app = Flask(__name__)
+
+
+@app.route("/msg")
+def new_messages():
+    msgs = []
+    while not msg_queue.empty():
+        msgs.append(msg_queue.get())
+
+    return jsonify({'data':msgs})
+    
+@app.route("/msg", methods = ['POST'])
+def receive_batch():
+    batch = request.json['data']
+    print(batch)
 
 @app.route("/")
 def chart():
@@ -153,13 +174,22 @@ def chart():
 
     # '#%02x%02x%02x' % (0, 128, 64)
 
-    for k, i in enumerate(global_data):
-        labels.append(datetime.utcfromtimestamp(i[2]/1000).strftime('%H:%M'))
-        values.append(i[1])
-        messages.append('')
-        r,g,b,a = cm.jet((i[0]/2)*255)
-        colors.append((k/len(global_data), "#{0:02x}{1:02x}{2:02x}ff".format(*COL.get_rgb(i[0]))))
-        # colors.append("#000000")
+    filtered_data = []
+
+    if len(global_data):
+
+        points_to_show = 10
+        every_n = 1#int(len(global_data) / points_to_show)
+
+        filtered_data = [x for i,x in enumerate(global_data) if i % every_n == 0]
+
+        for k, i in enumerate(filtered_data):
+            labels.append(datetime.utcfromtimestamp(i[2]/1000).strftime('%H:%M'))
+            values.append(i[1])
+            messages.append('')
+            r,g,b,a = cm.jet((i[0]/2)*255)
+            colors.append((k/len(global_data), "#{0:02x}{1:02x}{2:02x}ff".format(*COL.get_rgb(i[0]))))
+            # colors.append("#000000")
 
     return render_template('index.html', values=values, labels=labels, colors=colors, messages=messages)
 
