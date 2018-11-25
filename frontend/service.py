@@ -160,7 +160,7 @@ def new_messages():
 
     return jsonify({'data':msgs})
     
-@app.route("/msg", methods = ['POST'])
+@app.route("/batch", methods = ['POST'])
 def receive_batch():
     batch = request.json['data']
     print(batch)
