@@ -90,8 +90,8 @@ def send_messages():
     # producer = KafkaProducer(
     #     bootstrap_servers='35.228.26.195:9092')
 
-    tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
-    ma_filter = MovingAverageFilter()
+    # tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
+    # ma_filter = MovingAverageFilter()
 
     speed = 200
 
@@ -155,10 +155,27 @@ def clamp(r, g, b, a):
     return int(r*254),int(g*254),int(b*254)#,int(a*254)
 
 
+
+
 msg_queue = Queue()
+batch_queue = Queue()
+
 global_data = []
 COL = MplColorHelper('viridis', 0, 2)
 app = Flask(__name__)
+
+def batch_thread():
+    tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
+    ma_filter = MovingAverageFilter()
+
+    while True:
+        if not batch_queue.empty():
+            batch = batch_queue.get()
+
+            data = batch['text']
+            timestamps = batch['ts']
+
+            process_batch(tokenizer, model, data, timestamps, ma_filter)
 
 
 @app.route("/msg")
@@ -168,11 +185,11 @@ def new_messages():
         msgs.append(msg_queue.get())
 
     return jsonify({'data':msgs})
-    
+
 @app.route("/batch", methods = ['POST'])
 def receive_batch():
     batch = request.json['data']
-    print(batch)
+    batch_queue.put(batch)
 
     return jsonify({'success':True})
 
@@ -209,5 +226,10 @@ if __name__ == "__main__":
     t.daemon = True
     t.start()
 
+    batch_t = threading.Thread(target=batch_thread)
+    batch_t.daemon = True
+    batch_t.start()
+
     app.run(host='0.0.0.0', port=5001)                       
     t.join()
+    batch_t.join()
