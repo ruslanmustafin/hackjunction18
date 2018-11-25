@@ -17,7 +17,7 @@ from matplotlib import cm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from flask import jsonify
-# from kafka import KafkaProducer
+from kafka import KafkaProducer
 
 
 class MplColorHelper:
@@ -87,8 +87,8 @@ def process_batch(tokenizer, model, batch, timestamps, ma_filter, max_len=60):
 def send_messages():
 
     
-    # producer = KafkaProducer(
-    #     bootstrap_servers='35.228.26.195:9092')
+    producer = KafkaProducer(
+        bootstrap_servers='35.228.26.195:9092')
 
     # tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
     # ma_filter = MovingAverageFilter()
@@ -136,7 +136,7 @@ def send_messages():
             time_passed += delay
 
             msg_queue.put(line[2])
-            # producer.send('evilpanda', str.encode('{},{}'.format(line[2], milliseconds)))
+            producer.send('evilpanda', str.encode('{},{}'.format(line[2], milliseconds)))
             
 
             # if time_passed > time_window:
