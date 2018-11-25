@@ -172,8 +172,8 @@ app = Flask(__name__)
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--kafka', type=int, defulat=0, help='1 - send over kafka, 0 - send to local')
-parser.add_argument('--kafka-ver', type=str, defulat='1.1.1', help='kafka version to use')
+parser.add_argument('--kafka', type=int, defaulat=0, help='1 - send over kafka, 0 - send to local')
+parser.add_argument('--kafka-ver', type=str, default='1.1.1', help='kafka version to use')
 
 args = parser.parse_args()
 
