@@ -178,7 +178,7 @@ msg_queue = Queue()
 batch_queue = Queue()
 
 global_data = []
-COL = MplColorHelper('viridis', -1, 1)
+COL = MplColorHelper('viridis', 0, 1)
 app = Flask(__name__)
 
 
@@ -225,6 +225,7 @@ def chart():
     labels = []#random.sample(range(1, 100), 10)
     values = []#random.sample(range(1, 100), 10)
     messages = []
+    sentiment = []
     colors = []
 
     # '#%02x%02x%02x' % (0, 128, 64)
@@ -242,11 +243,19 @@ def chart():
             labels.append(datetime.utcfromtimestamp(i[2]/1000).strftime('%H:%M'))
             values.append(i[1])
             messages.append('')
-            r,g,b,a = cm.jet((i[0]/2)*255)
-            colors.append((k/len(global_data), "#{0:02x}{1:02x}{2:02x}ff".format(*COL.get_rgb(i[0]))))
+            colors.append((k/len(global_data), "#{0:02x}{1:02x}{2:02x}".format(*COL.get_rgb(i[0]))))
+            s = 'negative'
+
+            if i[0] >=-0.5 and i[0] <= 0.5:
+                s = 'neutral'
+            elif i[0] > 0.5:
+                s = 'positive'
+
+            sentiment.append(s)
+            messages.append('phones')
             # colors.append("#000000")
 
-    return render_template('index.html', values=values, labels=labels, colors=colors, messages=messages)
+    return render_template('index.html', values=values, labels=labels, colors=colors, messages=messages, sentiment=sentiment)
 
 if __name__ == "__main__":
     t = threading.Thread(target=send_messages)

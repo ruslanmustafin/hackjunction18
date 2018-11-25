@@ -33,118 +33,139 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
         <script>
             var ctx = document.getElementById('myChart').getContext("2d");
-            var colors = "{{colors}}"
+                
+                // gradientStroke.addColorStop(0, "#80b6f4");
+                // gradientStroke.addColorStop(1, "#f49080");
+                // var gradientStroke = ctx.createLinearGradient(500, 0, 100, 0);
+                var gradientStroke = ctx.createLinearGradient(0, 0, 1000, 0);
+                // gradientStroke.addColorStop(0, "#80b6f4");
+                // gradientStroke.addColorStop(1, "#80b6f4");
 
-            
-            
-            var gradientStroke = ctx.createLinearGradient(500, 0, 100, 0);
-            var gradientStroke = ctx.createLinearGradient(0, 0, 1000, 0);
-            {% for item in colors %}
-                gradientStroke.addColorStop({{item[0]}}, "{{item[1]}}");
-            {% endfor %}
-            // gradientStroke.addColorStop(0,  "#f49080");
-            // gradientStroke.addColorStop(0.1,  "#403aee");
-            // gradientStroke.addColorStop(0.2,  "#e8ee3a");
-            // gradientStroke.addColorStop(0.3,  "#403aee");
-            // gradientStroke.addColorStop(0.4,  "#e8ee3a");
-            // gradientStroke.addColorStop(0.5,  "#403aee");
-            // gradientStroke.addColorStop(0.6,  "#f49080");
-            // gradientStroke.addColorStop(0.7,  "#403aee");
-            // gradientStroke.addColorStop(0.8,  "#e8ee3a");
-            // gradientStroke.addColorStop(0.9,  "#403aee");
-            // gradientStroke.addColorStop(1, "#80f4ca");
-        
-            var gradientFill = ctx.createLinearGradient(500, 0, 100, 0);
-            gradientFill.addColorStop(0, "rgba(128, 182, 244, 0.6)");
-            gradientFill.addColorStop(1, "rgba(244, 144, 128, 0.6)");
-            var myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [{% for item in labels %}
-                        "{{item}}",
-                    {% endfor %}],
-                datasets: [{
-                    label: "Data",
-                    borderColor: gradientStroke,
-                    pointBorderColor: [{% for item in colors %}
-                                            "{{item[1]}}",
-                                        {% endfor %}],
-                    pointBackgroundColor: [{% for item in colors %}
-                                            "{{item[1]}}",
-                                        {% endfor %}],
-                    pointHoverBackgroundColor: gradientStroke,
-                    pointHoverBorderColor: gradientStroke,
-                    pointBorderWidth: 10,
-                    pointHoverRadius: 10,
-                    pointHoverBorderWidth: 1,
-                    pointRadius: 3,
-                    fill: true,                     // If true, fill the area under the line
-                    backgroundColor: gradientStroke,  // Specify the background color to the chart area
-                    borderWidth: 4,
-                    data: [{% for item in values %}
-                                {{item}},
-                            {% endfor %}]
-                }]
-            },
-            options: {
-                animation: {
-                    easing: "easeInOutBack"
-                },
-                legend: {
-                    position: "bottom"
-                },
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            fontColor: "rgba(0,0,0,0.5)",
-                            fontStyle: "bold",
-                            beginAtZero: true, // If true, scale will include 0 if it is not already included.
-                            maxTicksLimit: 5,  // Maximum number of ticks and gridlines to show.
-                            padding: 20        // Padding between the tick label and the axis.
-                        },
-                        gridLines: {
-                            drawTicks: false, // If true, draw lines beside the ticks in the axis area beside the chart.
-                            display: false
-                        }
-                    }],
-                    xAxes: [{
-                        gridLines: {
-                            zeroLineColor: "transparent" // Stroke color of the grid line for the first index (index 0).
-                        },
-                        ticks: {
-                            padding: 20,
-                            fontColor: "rgba(0,0,0,0.5)",
-                            fontStyle: "bold"
-                        }
-                    }]
-                },
-                tooltips: {
-                    position: 'nearest',
-                    mode: 'index',
-                    callbacks: {
-                        // Use the footer callback to display the sum of the items showing in the tooltip
-                        beforeBody: function(tooltipItems, data) {
-                            return 'Topic: ' + '%discussed_topic%';
-                        },
+                {% for item in colors %}
+                    gradientStroke.addColorStop({{ item[0] }}, "{{item[1]}}" + "aa");
+                {% endfor %}
 
-                        title: function(tooltipItems, data) {
-                            return '';
-                        },
+                // {% for item in colors %}
+                //     gradientStroke.addColorStop({{ item[0] }}, "{{item[1]}}");
+                // {% endfor %}
+                var gradientFill = ctx.createLinearGradient(0, 0, 1000, 0);
+                {% for item in colors %}
+                    gradientFill.addColorStop({{ item[0] }}, "{{item[1]}}"+"99");
+                {% endfor %}
 
-                        label: function(tooltipItem, data) {
-                            return '';
-                        },
-
-                        labelColor: function(tooltipItem, chart) {
-                            return {
-                                borderColor: 'rgb(255, 0, 0)',
-                                backgroundColor: 'rgb(255, 0, 0)'
-                            }
-                        },
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [{% for item in labels %}
+                                    "{{item}}",
+                                {% endfor %}],
+                        datasets: [{
+                            label: "Data",
+                            borderColor: gradientStroke,
+                            pointBorderColor: gradientStroke,
+                            pointBackgroundColor: gradientStroke,
+                            pointHoverBackgroundColor: gradientStroke,
+                            pointHoverBorderColor: gradientStroke,
+                            pointBorderWidth: 10,
+                            pointHoverRadius: 10,
+                            pointHoverBorderWidth: 1,
+                            pointRadius: 3,
+                            fill: true,                     // If true, fill the area under the line
+                            backgroundColor: gradientFill,  // Specify the background color to the chart area
+                            borderWidth: 4,
+                            data: [{% for item in values %}
+                                        {{ item }},
+                                    {% endfor %}],
+                            sentiment: [{% for item in sentiment %}
+                                        "{{ item }}",
+                                    {% endfor %}],
+                            messages: [{% for item in messages %}
+                                        "{{ item }}",
+                                    {% endfor %}]
+                        }]
                     },
-                },
-            }
-            });
+                    options: {
+                        animation: {
+                            easing: "easeInOutBack"
+                        },
+                        legend: {
+                            position: "bottom"
+                        },
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    fontColor: "rgba(0,0,0,0.5)",
+                                    fontStyle: "bold",
+                                    beginAtZero: true, // If true, scale will include 0 if it is not already included.
+                                    maxTicksLimit: 5,  // Maximum number of ticks and gridlines to show.
+                                    padding: 20        // Padding between the tick label and the axis.
+                                },
+                                gridLines: {
+                                    drawTicks: false, // If true, draw lines beside the ticks in the axis area beside the chart.
+                                    display: false
+                                }
+                            }],
+                            xAxes: [{
+                                gridLines: {
+                                    zeroLineColor: "transparent" // Stroke color of the grid line for the first index (index 0).
+                                },
+                                ticks: {
+                                    padding: 20,
+                                    fontColor: "rgba(0,0,0,0.5)",
+                                    fontStyle: "bold"
+                                }
+                            }]
+                        },
+                        tooltips: {
+                            position: 'nearest',
+                                mode: 'index',
+                                    callbacks: {
+                                // Use the footer callback to display the sum of the items showing in the tooltip
+                                beforeBody: function(tooltipItems, data) {
+                                    // return 'Topic: ' + tooltipItems;
+                                    var sum = '';
+                                    var topic = '';
+
+                                    tooltipItems.forEach(function (tooltipItem) {
+                                        sum += data.datasets[tooltipItem.datasetIndex].sentiment[tooltipItem.index];
+                                    });
+
+                                    return 'Sentiment: ' + sum;
+                                },
+
+                                title: function(tooltipItems, data) {
+                                    return '';
+                                },
+
+                                label: function(tooltipItem, data) {
+                                    return '';
+                                },
+
+                                labelColor: function(tooltipItem, chart) {
+                                    return {
+                                        borderColor: 'rgb(255, 0, 0)',
+                                        backgroundColor: 'rgb(255, 0, 0)'
+                                    }
+                                },
+                                footer: function(tooltipItems, data) {
+                                    var topic = '';
+
+                                    tooltipItems.forEach(function (tooltipItem) {
+                                        topic += data.datasets[tooltipItem.datasetIndex].messages[tooltipItem.index];
+                                    });
+
+                                    if (topic.length > 0) {
+                                        return 'Topic: ' + topic;
+                                    } else {
+                                        return '';
+                                    }
+
+                                    
+                                }
+                            },
+                        }
+                    }
+                });
         </script>
     </body>
 </html>
