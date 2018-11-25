@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 from flask import jsonify
 from kafka import KafkaProducer
 
+import argparse
+
 
 class MplColorHelper:
 
@@ -86,9 +88,13 @@ def process_batch(tokenizer, model, batch, timestamps, ma_filter, max_len=60):
 
 def send_messages():
 
-    
-    producer = KafkaProducer(
-        bootstrap_servers='35.228.26.195:9092')
+    if args.kafka:
+        api_ver = tuple(map(int, args.kafka_api.splt('.')))
+
+        producer = KafkaProducer(
+            bootstrap_servers='35.228.26.195:9092', api_version=api_ver)
+    else:
+        producer = None
 
     # tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
     # ma_filter = MovingAverageFilter()
@@ -131,20 +137,20 @@ def send_messages():
             #     timestamps.append(milliseconds)
             #     # print(len(batch), line[2])
 
-            
-
             time_passed += delay
 
             msg_queue.put(line[2])
-            producer.send('evilpanda', str.encode('{},{}'.format(line[2], milliseconds)))
-            
 
-            # if time_passed > time_window:
-            #     # process_batch(tokenizer, model, batch, timestamps, ma_filter)
-            #     batch.clear()
-            #     timestamps.clear()
+            if producer:
+                producer.send('evilpanda', str.encode('{},{}'.format(line[2], milliseconds)))
+            else:
+                if time_passed > time_window:
+                    # process_batch(tokenizer, model, batch, timestamps, ma_filter)
+                    batch_queue.put({'text':batch, 'ts':timestamps})
+                    batch.clear()
+                    timestamps.clear()
 
-            #     time_passed = 0
+                    time_passed = 0
 
 
             
@@ -163,6 +169,13 @@ batch_queue = Queue()
 global_data = []
 COL = MplColorHelper('viridis', 0, 2)
 app = Flask(__name__)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--kafka', type=int, defulat=0, help='1 - send over kafka, 0 - send to local')
+parser.add_argument('--kafka-ver', type=str, defulat='1.1.1', help='kafka version to use')
+
+args = parser.parse_args()
 
 def batch_thread():
     tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
