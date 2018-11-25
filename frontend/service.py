@@ -20,15 +20,20 @@ from flask import jsonify
 from kafka import KafkaProducer
 
 import argparse
+from matplotlib.colors import LinearSegmentedColormap
+import copy
 
 
 class MplColorHelper:
+    colors = [(1, 0, 0), (0, 0, 1), (0, 1, 0)]
+    cm = LinearSegmentedColormap.from_list(
+        'custom_rbg', colors, N=100)
 
     def __init__(self, cmap_name, start_val, stop_val):
         self.cmap_name = cmap_name
         self.cmap = plt.get_cmap(cmap_name)
         self.norm = mpl.colors.Normalize(vmin=start_val, vmax=stop_val)
-        self.scalar_map = cm.ScalarMappable(norm=self.norm, cmap=self.cmap)
+        self.scalar_map = cm.ScalarMappable(norm=self.norm, cmap=self.cm)
 
     def get_rgb(self, val):
         return clamp(*list(self.scalar_map.to_rgba(val)))
@@ -58,6 +63,7 @@ def load_models(tkn_path, mdl_path):
 def process_batch(tokenizer, model, batch, timestamps, ma_filter, max_len=60):
 
     if len(batch) == 0:
+        print('batch size is 0')
         return
 
     x_seq = tokenizer.texts_to_sequences(batch)
@@ -80,10 +86,11 @@ def process_batch(tokenizer, model, batch, timestamps, ma_filter, max_len=60):
     # point sentiment, point density
     # global_queue.put((y_pred.mean(), len(batch)))
 
-    global_data.append((y_pred.mean(), len(batch), sum(timestamps)/len(timestamps)))
-    
-    print(y_pred.mean())
+    result = (y_pred.mean() - 1)*2
 
+    global_data.append((result, len(batch), sum(timestamps)/len(timestamps)))
+    
+    # print(y_pred.mean())
     # return list(y_filt)
 
 def send_messages():
@@ -92,7 +99,7 @@ def send_messages():
         api_ver = tuple(map(int, args.kafka_api.splt('.')))
 
         producer = KafkaProducer(
-            bootstrap_servers='35.228.26.195:9092', api_version=api_ver)
+            bootstrap_servers=args.kafka_host, api_version=api_ver)
     else:
         producer = None
 
@@ -132,10 +139,10 @@ def send_messages():
 
             sleep(delay * 0.001 * (1 / speed))
 
-            # if len(line[2]) > 0:
-            #     batch.append(line[2])
-            #     timestamps.append(milliseconds)
-            #     # print(len(batch), line[2])
+            if len(line[2]) > 0:
+                batch.append(line[2])
+                timestamps.append(milliseconds)
+                # print(len(batch), line[2])
 
             time_passed += delay
 
@@ -146,7 +153,11 @@ def send_messages():
             else:
                 if time_passed > time_window:
                     # process_batch(tokenizer, model, batch, timestamps, ma_filter)
-                    batch_queue.put({'text':batch, 'ts':timestamps})
+                    print('adding batch')
+                    # print(batch_queue)
+                    
+                    batch_queue.put({'text':copy.deepcopy(batch), 'ts':copy.deepcopy(timestamps)})
+                    
                     batch.clear()
                     timestamps.clear()
 
@@ -167,19 +178,22 @@ msg_queue = Queue()
 batch_queue = Queue()
 
 global_data = []
-COL = MplColorHelper('viridis', 0, 2)
+COL = MplColorHelper('viridis', -1, 1)
 app = Flask(__name__)
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--kafka', type=int, default=0, help='1 - send over kafka, 0 - send to local')
 parser.add_argument('--kafka-ver', type=str, default='1.1.1', help='kafka version to use')
+parser.add_argument('--kafka-host', type=str, default='35.228.26.195:9092', help='kafka host')
 
 args = parser.parse_args()
 
 def batch_thread():
     tokenizer, model = load_models('../sentiment/models/tokenizer.pickle', '../sentiment/models/cnn_sentiment.h5')
     ma_filter = MovingAverageFilter()
+
+    # print(batch_queue)
 
     while True:
         if not batch_queue.empty():
@@ -242,6 +256,8 @@ if __name__ == "__main__":
     batch_t = threading.Thread(target=batch_thread)
     batch_t.daemon = True
     batch_t.start()
+
+    sleep(2.0)
 
     app.run(host='0.0.0.0', port=5001)                       
     t.join()
