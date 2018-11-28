@@ -22,6 +22,7 @@ from kafka import KafkaProducer
 import argparse
 from matplotlib.colors import LinearSegmentedColormap
 import copy
+from flask_socketio import SocketIO
 
 
 class MplColorHelper:
@@ -146,7 +147,8 @@ def send_messages():
 
             time_passed += delay
 
-            msg_queue.put(line[2])
+            # msg_queue.put(line[2])
+            socketio.emit('response', {'username':line[0], 'message':line[2]})
 
             if producer:
                 producer.send('evilpanda', str.encode('{},{}'.format(line[2], milliseconds)))
@@ -162,6 +164,8 @@ def send_messages():
                     timestamps.clear()
 
                     time_passed = 0
+
+                    
 
 
             
@@ -180,6 +184,7 @@ batch_queue = Queue()
 global_data = []
 COL = MplColorHelper('viridis', 0, 1)
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 
 parser = argparse.ArgumentParser()
@@ -204,6 +209,9 @@ def batch_thread():
 
             process_batch(tokenizer, model, data, timestamps, ma_filter)
 
+@app.route('/chat')
+def sessions():
+    return render_template('chat.html')
 
 @app.route("/msg")
 def new_messages():
@@ -268,6 +276,7 @@ if __name__ == "__main__":
 
     sleep(2.0)
 
-    app.run(host='0.0.0.0', port=5001)                       
+    # app.run(host='0.0.0.0', port=5001)                       
+    socketio.run(app, port=5001, debug=True)
     t.join()
     batch_t.join()
